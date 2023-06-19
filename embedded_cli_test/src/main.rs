@@ -59,7 +59,22 @@ fn main() {
         cli.add_char(c);
         cli.process();
     }
+    while let Some(output) = cli.get_output_char() {
+        print!("{}", output);
+    }
 
+    for c in "help test123\u{7f}\u{7f}\u{7f}\r".chars() {
+        cli.add_char(c);
+        cli.process();
+    }
+    while let Some(output) = cli.get_output_char() {
+        print!("{}", output);
+    }
+
+    for c in "not_there\r".chars() {
+        cli.add_char(c);
+        cli.process();
+    }
     while let Some(output) = cli.get_output_char() {
         print!("{}", output);
     }

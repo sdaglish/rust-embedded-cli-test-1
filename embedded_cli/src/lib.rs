@@ -177,11 +177,23 @@ impl EmbeddedCli {
                             }
                         }
                     } else {
+                        let mut found = false;
                         for item in self.menu {
                             if item.command.starts_with(input_vector[0]) {
                                 (item.function)(&input_vector, &mut self.output_buffer);
+                                found = true;
                                 break;
                             }
+                        }
+                        if !found {
+                            for c in "Unknown command: ".chars() {
+                                self.output_buffer.enqueue(c).ok();
+                            }
+                            for c in input_vector[0].chars() {
+                                self.output_buffer.enqueue(c).ok();
+                            }
+                            self.output_buffer.enqueue('\r').ok();
+                            self.output_buffer.enqueue('\n').ok();
                         }
                     }
                 }
