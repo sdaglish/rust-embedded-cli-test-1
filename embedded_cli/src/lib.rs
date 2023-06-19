@@ -25,12 +25,15 @@ pub struct EmbeddedCli {
 
 impl EmbeddedCli {
     pub fn new(name: &'static str, menu: &'static [MenuItem<'static>]) -> Self {
-        Self {
+        let mut s = Self {
             name,
             input_buffer: String::new(),
             output_buffer: Queue::new(),
             menu,
-        }
+        };
+        s.output_buffer.enqueue('>').ok();
+        s.output_buffer.enqueue(' ').ok();
+        return s;
     }
 
     // TODO: Update to return failure if queue is full
@@ -166,6 +169,8 @@ impl EmbeddedCli {
                                     for c in item.description.chars() {
                                         self.output_buffer.enqueue(c).ok();
                                     }
+                                    self.output_buffer.enqueue('\r').ok();
+                                    self.output_buffer.enqueue('\n').ok();
 
                                     break;
                                 }
@@ -182,6 +187,10 @@ impl EmbeddedCli {
                 }
             }
             self.input_buffer.clear();
+            self.output_buffer.enqueue('\r').ok();
+            self.output_buffer.enqueue('\n').ok();
+            self.output_buffer.enqueue('>').ok();
+            self.output_buffer.enqueue(' ').ok();
         }
     }
 

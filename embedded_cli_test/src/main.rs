@@ -34,7 +34,7 @@ const MENU: &[embedded_cli::MenuItem] = &[
 
 fn main() {
     let mut cli = embedded_cli::EmbeddedCli::new("test", MENU);
-    for c in "hello\r\n".chars() {
+    for c in "hello\r".chars() {
         cli.add_char(c);
         cli.process();
         //     println!("C: {}", c);
@@ -46,7 +46,7 @@ fn main() {
         print!("{}", output);
     }
 
-    for c in "help\r\n".chars() {
+    for c in "help\r".chars() {
         cli.add_char(c);
         cli.process();
     }
@@ -55,7 +55,7 @@ fn main() {
         print!("{}", output);
     }
 
-    for c in "help test\r\n".chars() {
+    for c in "help test\r".chars() {
         cli.add_char(c);
         cli.process();
     }
