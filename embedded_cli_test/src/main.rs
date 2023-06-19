@@ -1,79 +1,29 @@
-const MENU: &[embedded_cli::MenuItem] = &[
-    embedded_cli::MenuItem {
-        command: "hello",
-        description: "Prints hello world",
-        parameters: &[],
-        function: |_, output_queue| {
-            for c in "Hello world! function\r\n".chars() {
-                output_queue.enqueue(c).ok();
-            }
-        },
-    },
-    embedded_cli::MenuItem {
-        command: "test",
-        description: "Prints test",
-        parameters: &[
-            embedded_cli::MenuParameters {
-                name: "a",
-                description: "a something or other...",
-            },
-            embedded_cli::MenuParameters {
-                name: "b",
-                description: "b something or other...",
-            },
-        ],
-        function: |_, output_queue| {
-            for c in "Test function!\r\n".chars() {
-                output_queue.enqueue(c).ok();
-            }
-        },
-    },
-];
+#![no_main]
+#![no_std]
+#![feature(type_alias_impl_trait)]
 
-fn main() {
-    let mut cli = embedded_cli::EmbeddedCli::new("test", MENU);
-    for c in "hello\r".chars() {
-        cli.add_char(c);
-        cli.process();
-        //     println!("C: {}", c);
-        // println!("Input buffer: {:?}", cli.input_buffer  );
-        // println!("Output buffer: {:?}", cli.output_buffer  );
-    }
+use panic_rtt_target as _;
+use rtic::app;
 
-    while let Some(output) = cli.get_output_char() {
-        print!("{}", output);
-    }
+#[app(device = stm32f4xx_hal::pac, peripherals = true)]
+mod app {
+    use heapless::spsc::{Consumer, Producer, Queue};
+    use rtic_monotonics::systick::*;
+    use stm32f4xx_hal::{
+        pac::USART2,
+        prelude::*,
+        serial::{config::Config, Rx, Serial, Tx},
+    };
+    use embedded_cli;
+    
+    #[shared]
+    struct Shared {}
 
-    for c in "help\r".chars() {
-        cli.add_char(c);
-        cli.process();
-    }
+    #[local]
+    struct Local {}
 
-    while let Some(output) = cli.get_output_char() {
-        print!("{}", output);
-    }
-
-    for c in "help test\r".chars() {
-        cli.add_char(c);
-        cli.process();
-    }
-    while let Some(output) = cli.get_output_char() {
-        print!("{}", output);
-    }
-
-    for c in "help test123\u{7f}\u{7f}\u{7f}\r".chars() {
-        cli.add_char(c);
-        cli.process();
-    }
-    while let Some(output) = cli.get_output_char() {
-        print!("{}", output);
-    }
-
-    for c in "not_there\r".chars() {
-        cli.add_char(c);
-        cli.process();
-    }
-    while let Some(output) = cli.get_output_char() {
-        print!("{}", output);
+    #[init]
+    fn init(_cx: init::Context) -> (Shared, Local) {
+        (Shared {}, Local {})
     }
 }
