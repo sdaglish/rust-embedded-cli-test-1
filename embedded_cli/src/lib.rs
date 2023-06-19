@@ -129,6 +129,8 @@ impl EmbeddedCli {
                                     // self.output_buffer.enqueue_str(item.description).ok();
                                     self.output_buffer.enqueue('\r').ok();
                                     self.output_buffer.enqueue('\n').ok();
+                                    self.output_buffer.enqueue('\r').ok();
+                                    self.output_buffer.enqueue('\n').ok();
 
                                     for c in "PARAMETERS:\n\r".chars() {
                                         self.output_buffer.enqueue(c).ok();
@@ -154,6 +156,15 @@ impl EmbeddedCli {
                                         }
                                         self.output_buffer.enqueue('\r').ok();
                                         self.output_buffer.enqueue('\n').ok();
+                                    }
+                                    self.output_buffer.enqueue('\r').ok();
+                                    self.output_buffer.enqueue('\n').ok();
+
+                                    for c in "DESCRIPTION:\n\r".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for c in item.description.chars() {
+                                        self.output_buffer.enqueue(c).ok();
                                     }
 
                                     break;
