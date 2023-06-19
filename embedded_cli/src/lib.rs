@@ -1,10 +1,25 @@
 use heapless::spsc::Queue;
 use heapless::String;
+use heapless::Vec;
+
+const BUFFER_SIZE: usize = 128;
+
+pub struct MenuParameters {
+    name: &'static str,
+    description: &'static str,
+}
+
+pub struct MenuItem<'a> {
+    command: &'static str,
+    description: &'static str,
+    function: fn(&Vec<&str, 8>, &mut Queue<char, BUFFER_SIZE>),
+    parameters: &'a [MenuParameters],
+}
 
 pub struct EmbeddedCli {
     pub name: &'static str,
-    input_buffer: String<128>,
-    output_buffer: Queue<char, 128>,
+    input_buffer: String<BUFFER_SIZE>,
+    output_buffer: Queue<char, BUFFER_SIZE>,
 }
 
 impl EmbeddedCli {
@@ -56,33 +71,22 @@ mod tests {
         assert_eq!(cli.output_buffer.dequeue(), Some('a'));
         assert_eq!(cli.output_buffer.dequeue(), Some('b'));
     }
-
-    // #[test]
-    // fn add_char_adds_to_back_of_queue() {
-    //     let mut cli = EmbeddedCli::new("test");
-    //     cli.add_char('a');
-    //     assert_eq!(cli.input_buffer[0], Some('a'));
-    // }
-
-    // #[test]
-    // fn add_char_does_not_overflow() {
-    //     let mut cli = EmbeddedCli::new("test");
-    //     for _ in 0..128 {
-    //         cli.add_char('a');
-    //     }
-    //     assert_eq!(cli.input_buffer.enqueue('a'), Err('a'));
-    // }
-
-    // #[test]
-    // fn add_char_does_not_overflow_when_full() {
-    //     let mut cli = EmbeddedCli::new("test");
-    //     for _ in 0..128 {
-    //         cli.add_char('a');
-    //     }
-    //     cli.input_buffer.dequeue();
-    //     cli.add_char('a');
-    //     assert_eq!(cli.input_buffer.enqueue('a'), Err('a'));
-    // }
+    
+    #[test]
+    fn check_backspace() {
+        let mut cli = EmbeddedCli::new("test");
+        cli.add_char('a');
+        cli.add_char('b');
+        assert_eq!(cli.input_buffer.len(), 2);
+        cli.add_char('\u{8f}');
+        assert_eq!(cli.output_buffer.dequeue(), Some('a'));
+        assert_eq!(cli.output_buffer.dequeue(), Some('b'));
+        assert_eq!(cli.output_buffer.dequeue(), Some('\x08'));
+        assert_eq!(cli.output_buffer.dequeue(), Some(' '));
+        assert_eq!(cli.output_buffer.dequeue(), Some('\x08'));
+        
+        assert_eq!(cli.input_buffer.len(), 1);
+    }
 
     #[test]
     fn correct_name_stored() {
