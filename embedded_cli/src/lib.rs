@@ -33,7 +33,7 @@ impl EmbeddedCli {
         };
         s.output_buffer.enqueue('>').ok();
         s.output_buffer.enqueue(' ').ok();
-        return s;
+        s
     }
 
     // TODO: Update to return failure if queue is full
@@ -215,34 +215,41 @@ impl EmbeddedCli {
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn add_char_adds_to_back_of_output_queue() {
-    //     let mut cli = EmbeddedCli::new("test");
-    //     cli.add_char('a');
-    //     cli.add_char('b');
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('a'));
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('b'));
-    // }
-    //
-    // #[test]
-    // fn check_backspace() {
-    //     let mut cli = EmbeddedCli::new("test");
-    //     cli.add_char('a');
-    //     cli.add_char('b');
-    //     assert_eq!(cli.input_buffer.len(), 2);
-    //     cli.add_char('\u{8f}');
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('a'));
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('b'));
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('\x08'));
-    //     assert_eq!(cli.output_buffer.dequeue(), Some(' '));
-    //     assert_eq!(cli.output_buffer.dequeue(), Some('\x08'));
-    //
-    //     assert_eq!(cli.input_buffer.len(), 1);
-    // }
-    //
-    // #[test]
-    // fn correct_name_stored() {
-    //     let cli = EmbeddedCli::new("test2");
-    //     assert_eq!(cli.name, "test2");
-    // }
+    const MENU: &[MenuItem] = &[
+        MenuItem {
+            command: "hello",
+            description: "Prints hello world",
+            parameters: &[],
+            function: |_, output_queue| {
+                for c in "Hello world! function\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            },
+        },
+        MenuItem {
+            command: "test",
+            description: "Prints test",
+            parameters: &[
+                MenuParameters {
+                    name: "a",
+                    description: "a something or other...",
+                },
+                MenuParameters {
+                    name: "b",
+                    description: "b something or other...",
+                },
+            ],
+            function: |_, output_queue| {
+                for c in "Test function!\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            },
+        },
+    ];
+
+    #[test]
+    fn correct_name_stored() {
+        let cli = EmbeddedCli::new("test2", MENU);
+        assert_eq!(cli.name, "test2");
+    }
 }

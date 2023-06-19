@@ -1,5 +1,3 @@
-use embedded_cli;
-
 const MENU: &[embedded_cli::MenuItem] = &[
     embedded_cli::MenuItem {
         command: "hello",
