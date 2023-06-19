@@ -6,7 +6,7 @@ const MENU: &[embedded_cli::MenuItem] = &[
         description: "Prints hello world",
         parameters: &[],
         function: |_, output_queue| {
-            for c in "Hello world 123!\r\n".chars() {
+            for c in "Hello world! function\r\n".chars() {
                 output_queue.enqueue(c).ok();
             }
         },
@@ -25,7 +25,7 @@ const MENU: &[embedded_cli::MenuItem] = &[
             },
         ],
         function: |_, output_queue| {
-            for c in "Help!\r\n".chars() {
+            for c in "Test function!\r\n".chars() {
                 output_queue.enqueue(c).ok();
             }
         },
@@ -49,13 +49,18 @@ fn main() {
     for c in "help\r\n".chars() {
         cli.add_char(c);
         cli.process();
-        //     println!("C: {}", c);
-        // println!("Input buffer: {:?}", cli.input_buffer  );
-        // println!("Output buffer: {:?}", cli.output_buffer  );
     }
 
     while let Some(output) = cli.get_output_char() {
         print!("{}", output);
     }
-    // println!("Output buffer: {:?}", cli.output_buffer);
+
+    for c in "help test\r\n".chars() {
+        cli.add_char(c);
+        cli.process();
+    }
+
+    while let Some(output) = cli.get_output_char() {
+        print!("{}", output);
+    }
 }

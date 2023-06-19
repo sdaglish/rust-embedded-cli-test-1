@@ -47,19 +47,13 @@ impl EmbeddedCli {
         }
     }
 
-    fn help(&mut self, input_vector: &Vec<&str, 8>) {
-        // if input_vector.len() == 1 {
-        // } else {
-        // }
-    }
-
     pub fn process(&mut self) {
         if self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
             while self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
                 self.input_buffer.pop();
             }
 
-            if (self.input_buffer.len() == 0) {
+            if self.input_buffer.len() == 0 {
                 return;
             }
 
@@ -109,16 +103,62 @@ impl EmbeddedCli {
                                 self.output_buffer.enqueue('\n').ok();
                             }
                         } else {
-                            // for item in self.menu {
-                            //     if item.command.starts_with(input_vector[1]) {
-                            //         self.output_buffer.enqueue('\r').ok();
-                            //         self.output_buffer.enqueue('\n').ok();
-                            //         self.output_buffer.enqueue_str(item.command).ok();
-                            //         self.output_buffer.enqueue_str(" - ").ok();
-                            //         self.output_buffer.enqueue_str(item.description).ok();
-                            //         break;
-                            //     }
-                            // }
+                            for item in self.menu {
+                                if item.command.starts_with(input_vector[1]) {
+                                    for c in "SUMMARY:\n\r".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for c in "  ".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for c in item.command.chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for params in item.parameters {
+                                        for c in " <".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in params.name.chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in ">".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                    }
+                                    // self.output_buffer.enqueue_str(" - ").ok();
+                                    // self.output_buffer.enqueue_str(item.description).ok();
+                                    self.output_buffer.enqueue('\r').ok();
+                                    self.output_buffer.enqueue('\n').ok();
+
+                                    for c in "PARAMETERS:\n\r".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for parameter in item.parameters {
+                                        for c in "  ".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in "<".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in parameter.name.chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in ">".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in " - ".chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        for c in parameter.description.chars() {
+                                            self.output_buffer.enqueue(c).ok();
+                                        }
+                                        self.output_buffer.enqueue('\r').ok();
+                                        self.output_buffer.enqueue('\n').ok();
+                                    }
+
+                                    break;
+                                }
+                            }
                         }
                     } else {
                         for item in self.menu {
