@@ -18,14 +18,19 @@ impl EmbeddedCli {
 
     // TODO: Update to return failure if queue is full
     pub fn add_char(&mut self, c: char) {
-        // self.input_buffer.enqueue(c).ok();
-        self.input_buffer.push(c).ok();
-        self.output_buffer.enqueue(c).ok();
+        // Backspace
+        if (c == '\u{8f}') || (c == '\u{7f}') {
+            self.output_buffer.enqueue('\x08').ok();
+            self.output_buffer.enqueue(' ').ok();
+            self.output_buffer.enqueue('\x08').ok();
+            self.input_buffer.pop();
+        } else {
+            self.input_buffer.push(c).ok();
+            self.output_buffer.enqueue(c).ok();
+        }
     }
 
     pub fn process(&mut self) {
-        // let c = self.input_buffer.dequeue();
-        // let c = self.input_buffer.last().cloned();
         if self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
             self.output_buffer.enqueue('\r').ok();
             self.output_buffer.enqueue('\n').ok();
@@ -38,15 +43,6 @@ impl EmbeddedCli {
         self.output_buffer.dequeue()
     }
 }
-// impl<T> EmbeddedCli<T> {
-//     pub fn new(input: T, output: T) -> Self {
-//         Self { input, output }
-//     }
-
-//     pub fn add_char(&mut self, c: char) {
-//         self.input.push(c);
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
@@ -93,4 +89,5 @@ mod tests {
         let cli = EmbeddedCli::new("test2");
         assert_eq!(cli.name, "test2");
     }
+    
 }
