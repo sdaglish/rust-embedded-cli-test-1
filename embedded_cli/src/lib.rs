@@ -2,11 +2,11 @@ use heapless::spsc::Queue;
 use heapless::String;
 use heapless::Vec;
 
-const BUFFER_SIZE: usize = 128;
+const BUFFER_SIZE: usize = 1028;
 
 pub struct MenuParameters {
-    name: &'static str,
-    description: &'static str,
+    pub name: &'static str,
+    pub description: &'static str,
 }
 
 pub struct MenuItem<'a> {
@@ -18,8 +18,8 @@ pub struct MenuItem<'a> {
 
 pub struct EmbeddedCli {
     pub name: &'static str,
-    input_buffer: String<BUFFER_SIZE>,
-    output_buffer: Queue<char, BUFFER_SIZE>,
+    pub input_buffer: String<BUFFER_SIZE>,
+    pub output_buffer: Queue<char, BUFFER_SIZE>,
     menu: &'static [MenuItem<'static>],
 }
 
@@ -47,41 +47,85 @@ impl EmbeddedCli {
         }
     }
 
+    fn help(&mut self, input_vector: &Vec<&str, 8>) {
+        // if input_vector.len() == 1 {
+        // } else {
+        // }
+    }
+
     pub fn process(&mut self) {
         if self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
-            self.output_buffer.enqueue('\r').ok();
-            self.output_buffer.enqueue('\n').ok();
-
             while self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
                 self.input_buffer.pop();
             }
+
+            if (self.input_buffer.len() == 0) {
+                return;
+            }
+
+            self.output_buffer.enqueue('\r').ok();
+            self.output_buffer.enqueue('\n').ok();
 
             // Checking through menu list to see if what's been entered was relevent.
             // But fifrst checking for the work help.
 
             // Split input_buffer into a vector, based on whitespaces.
             {
-                let mut input_vector: Vec<&str, 8> = Vec::new();
-                for s in self.input_buffer.split(' ') {
-                    input_vector.push(s).ok();
-                }
+                let input_vector: Vec<&str, 8> = self.input_buffer.split(' ').collect();
+                // for s in self.input_buffer.split(' ') {
+                //     input_vector.push(s).ok();
+                // }
 
                 // Check through menu list to see if what's been entered was relevant.
                 // But first checking for the word "help".
 
-                if input_vector[0] == "help" {
-                    // for item in self.menu {
-                    //     self.output_buffer.enqueue_str(item.command).ok();
-                    //     self.output_buffer.enqueue_str(" - ").ok();
-                    //     self.output_buffer.enqueue_str(item.description).ok();
-                    //     self.output_buffer.enqueue('\r').ok();
-                    //     self.output_buffer.enqueue('\n').ok();
-                    // }
-                } else {
-                    for item in self.menu {
-                        if item.command.starts_with(input_vector[0]) {
-                            (item.function)(&input_vector, &mut self.output_buffer);
-                            break;
+                {
+                    if input_vector[0] == "help" {
+                        // TODO: This would be better if it was a separate function, but borrow issues...
+                        if input_vector.len() == 1 {
+                            for c in "AVAILABLE ITEMS:\n\r".chars() {
+                                self.output_buffer.enqueue(c).ok();
+                            }
+                            for item in self.menu {
+                                for c in "  ".chars() {
+                                    self.output_buffer.enqueue(c).ok();
+                                }
+                                for c in item.command.chars() {
+                                    self.output_buffer.enqueue(c).ok();
+                                }
+
+                                for params in item.parameters {
+                                    for c in " <".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for c in params.name.chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                    for c in ">".chars() {
+                                        self.output_buffer.enqueue(c).ok();
+                                    }
+                                }
+                                self.output_buffer.enqueue('\r').ok();
+                                self.output_buffer.enqueue('\n').ok();
+                            }
+                        } else {
+                            // for item in self.menu {
+                            //     if item.command.starts_with(input_vector[1]) {
+                            //         self.output_buffer.enqueue('\r').ok();
+                            //         self.output_buffer.enqueue('\n').ok();
+                            //         self.output_buffer.enqueue_str(item.command).ok();
+                            //         self.output_buffer.enqueue_str(" - ").ok();
+                            //         self.output_buffer.enqueue_str(item.description).ok();
+                            //         break;
+                            //     }
+                            // }
+                        }
+                    } else {
+                        for item in self.menu {
+                            if item.command.starts_with(input_vector[0]) {
+                                (item.function)(&input_vector, &mut self.output_buffer);
+                                break;
+                            }
                         }
                     }
                 }
