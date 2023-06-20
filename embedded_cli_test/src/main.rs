@@ -10,6 +10,7 @@ use rtic::app;
 mod app {
     use embedded_cli::{MenuItem, MenuParameters};
     use heapless::spsc::{Consumer, Producer, Queue};
+    use heapless::Vec;
     use rtic_monotonics::systick::*;
     use stm32f4xx_hal::{
         pac::USART2,
@@ -61,13 +62,52 @@ mod app {
                     description: "The value to set the setpoint to (only used with 'set')",
                 },
             ],
-            function: |_, output_queue| {
-                for c in "Temperature setpoint function!\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
-            },
+            function: cli_temperature_setpoint,
         },
     ];
+
+    fn cli_temperature_setpoint(parameters: &Vec<&str, 8>, output_queue: &mut Queue<char, 1028>) {
+        if parameters.len() == 1 {
+            for c in "Missing parameter\r\n".chars() {
+                output_queue.enqueue(c).ok();
+            }
+            return;
+        }
+        match parameters[1] {
+            "set" => {
+                if parameters.len() != 3 {
+                    for c in "Missing parameter\r\n".chars() {
+                        output_queue.enqueue(c).ok();
+                    }
+                    return;
+                }
+                for c in "Setting temperature setpoint to ".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+                for c in parameters[2].chars() {
+                    output_queue.enqueue(c).ok();
+                }
+                for c in "\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            }
+            "get" => {
+                for c in "Getting temperature setpoint\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            }
+            "default" => {
+                for c in "Setting temperature setpoint to default\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            }
+            _ => {
+                for c in "Unknown parameter\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            }
+        }
+    }
 
     #[shared]
     struct Shared {}

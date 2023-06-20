@@ -35,6 +35,8 @@ impl EmbeddedCli {
             output_buffer: Queue::new(),
             menu,
         };
+        s.output_buffer.enqueue('\n').ok();
+        s.output_buffer.enqueue('\r').ok();
         s.output_buffer.enqueue('>').ok();
         s.output_buffer.enqueue(' ').ok();
         s
@@ -83,103 +85,52 @@ impl EmbeddedCli {
 
                 {
                     if input_vector[0] == "help" {
+                        let mut help_string = String::<BUFFER_SIZE>::new();
                         // TODO: This would be better if it was a separate function, but borrow issues...
                         if input_vector.len() == 1 {
-                            for c in "AVAILABLE ITEMS:\n\r".chars() {
-                                self.output_buffer.enqueue(c).ok();
-                            }
+                            help_string.push_str("AVAILABLE ITEMS:\n\r").ok();
                             for item in self.menu {
-                                for c in "  ".chars() {
-                                    self.output_buffer.enqueue(c).ok();
-                                }
-                                for c in item.command.chars() {
-                                    self.output_buffer.enqueue(c).ok();
-                                }
+                                help_string.push_str("  ").ok();
+                                help_string.push_str(item.command).ok();
 
                                 for params in item.parameters {
-                                    for c in " <".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    for c in params.name.chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    for c in ">".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
+                                    help_string.push_str(" <").ok();
+                                    help_string.push_str(params.name).ok();
+                                    help_string.push_str(">").ok();
                                 }
-                                self.output_buffer.enqueue('\r').ok();
-                                self.output_buffer.enqueue('\n').ok();
+                                help_string.push_str("\r\n").ok();
                             }
                         } else {
                             for item in self.menu {
                                 if item.command.starts_with(input_vector[1]) {
-                                    for c in "SUMMARY:\n\r".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    for c in "  ".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    for c in item.command.chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
+                                    help_string.push_str("SUMMARY:\n\r").ok();
+                                    help_string.push_str(item.command).ok();
                                     for params in item.parameters {
-                                        for c in " <".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in params.name.chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in ">".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
+                                        help_string.push_str(" <").ok();
+                                        help_string.push_str(params.name).ok();
+                                        help_string.push_str(">").ok();
                                     }
-                                    // self.output_buffer.enqueue_str(" - ").ok();
-                                    // self.output_buffer.enqueue_str(item.description).ok();
-                                    self.output_buffer.enqueue('\r').ok();
-                                    self.output_buffer.enqueue('\n').ok();
-                                    self.output_buffer.enqueue('\r').ok();
-                                    self.output_buffer.enqueue('\n').ok();
-
-                                    for c in "PARAMETERS:\n\r".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
+                                    help_string.push_str("\r\n\r\n").ok();
+                                    help_string.push_str("PARAMETERS:\n\r").ok();
                                     for parameter in item.parameters {
-                                        for c in "  ".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in "<".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in parameter.name.chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in ">".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in " - ".chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        for c in parameter.description.chars() {
-                                            self.output_buffer.enqueue(c).ok();
-                                        }
-                                        self.output_buffer.enqueue('\r').ok();
-                                        self.output_buffer.enqueue('\n').ok();
+                                        help_string.push_str("  <").ok();
+                                        help_string.push_str(parameter.name).ok();
+                                        help_string.push_str("> - ").ok();
+                                        help_string.push_str(parameter.description).ok();
+                                        help_string.push_str("\r\n").ok();
                                     }
-                                    self.output_buffer.enqueue('\r').ok();
-                                    self.output_buffer.enqueue('\n').ok();
+                                    help_string.push_str("\r\n").ok();
 
-                                    for c in "DESCRIPTION:\n\r".chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    for c in item.description.chars() {
-                                        self.output_buffer.enqueue(c).ok();
-                                    }
-                                    self.output_buffer.enqueue('\r').ok();
-                                    self.output_buffer.enqueue('\n').ok();
+                                    help_string.push_str("DESCRIPTION:\n\r").ok();
+                                    help_string.push_str(item.description).ok();
+                                    help_string.push_str("\r\n").ok();
 
                                     break;
                                 }
                             }
+                        }
+                        for c in help_string.chars() {
+                            self.output_buffer.enqueue(c).ok();
                         }
                     } else {
                         let mut found = false;
