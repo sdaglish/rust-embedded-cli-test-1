@@ -48,6 +48,25 @@ mod app {
                 }
             },
         },
+        MenuItem {
+            command: "temperature_setpoint",
+            description: "Control the temperature setpoint",
+            parameters: &[
+                MenuParameters {
+                    name: "control",
+                    description: "'set', 'get', or 'default'",
+                },
+                MenuParameters {
+                    name: "value",
+                    description: "The value to set the setpoint to (only used with 'set')",
+                },
+            ],
+            function: |_, output_queue| {
+                for c in "Temperature setpoint function!\r\n".chars() {
+                    output_queue.enqueue(c).ok();
+                }
+            },
+        },
     ];
 
     #[shared]
@@ -141,11 +160,6 @@ mod app {
                     }
                 }
             }
-            // if let Some(byte) = cx.local.serial_debug_cli.get_output_char() {
-            //     cx.local.serial_debug_tx.write(byte as u8).ok();
-            // } else {
-            //     // break;
-            // }
             Systick::delay(100.millis()).await;
         }
     }

@@ -54,6 +54,7 @@ impl EmbeddedCli {
         }
     }
 
+    // TODO: This takes up 5K of flash.  Can we make it smaller?
     pub fn process(&mut self) {
         if self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
             while self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
