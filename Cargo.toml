@@ -1,5 +1,5 @@
 [workspace]
+resolver = "2"
 
 members = ["embedded_cli_test", "embedded_cli"]
 
-workspace.resolver = "2"

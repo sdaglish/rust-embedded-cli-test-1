@@ -2,16 +2,19 @@
 #![no_std]
 #![feature(type_alias_impl_trait)]
 
-// use panic_rtt_target as _;
-use panic_reset as _;
+// TODO: This might get removed later on when going to release
+use panic_rtt_target as _;
+// use panic_reset as _;
 use rtic::app;
 
 #[app(device = stm32f4xx_hal::pac, peripherals = true)]
 mod app {
     use embedded_cli::{MenuItem, MenuParameters};
     use heapless::spsc::{Consumer, Producer, Queue};
+    use heapless::String;
     use heapless::Vec;
     use rtic_monotonics::systick::*;
+    use rtt_target::{rprintln, rtt_init_print};
     use stm32f4xx_hal::{
         pac::USART2,
         prelude::*,
@@ -24,10 +27,9 @@ mod app {
             command: "hello",
             description: "Prints hello world",
             parameters: &[],
-            function: |_, output_queue| {
-                for c in "Hello world! function\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+            function: |_, output_string| {
+                output_string.clear();
+                output_string.push_str("Hello world! function\r\n").ok();
             },
         },
         MenuItem {
@@ -43,10 +45,9 @@ mod app {
                     description: "b something or other...",
                 },
             ],
-            function: |_, output_queue| {
-                for c in "Test function!\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+            function: |_, output_string| {
+                output_string.clear();
+                output_string.push_str("Test function!\r\n").ok();
             },
         },
         MenuItem {
@@ -66,45 +67,36 @@ mod app {
         },
     ];
 
-    fn cli_temperature_setpoint(parameters: &Vec<&str, 8>, output_queue: &mut Queue<char, 1028>) {
+    fn cli_temperature_setpoint(parameters: &Vec<&str, 8>, output_string: &mut String<1028>) {
+        output_string.clear();
         if parameters.len() == 1 {
-            for c in "Missing parameter\r\n".chars() {
-                output_queue.enqueue(c).ok();
-            }
+            output_string.push_str("Missing parameter\r\n").ok();
             return;
         }
         match parameters[1] {
             "set" => {
                 if parameters.len() != 3 {
-                    for c in "Missing parameter\r\n".chars() {
-                        output_queue.enqueue(c).ok();
-                    }
+                    output_string.push_str("Missing parameter\r\n").ok();
                     return;
                 }
-                for c in "Setting temperature setpoint to ".chars() {
-                    output_queue.enqueue(c).ok();
-                }
-                for c in parameters[2].chars() {
-                    output_queue.enqueue(c).ok();
-                }
-                for c in "\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+                output_string
+                    .push_str("Setting temperature setpoint to ")
+                    .ok();
+                output_string.push_str(parameters[2]).ok();
+                output_string.push_str("\r\n").ok();
             }
             "get" => {
-                for c in "Getting temperature setpoint\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+                output_string
+                    .push_str("Getting temperature setpoint\r\n")
+                    .ok();
             }
             "default" => {
-                for c in "Setting temperature setpoint to default\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+                output_string
+                    .push_str("Setting temperature setpoint to default\r\n")
+                    .ok();
             }
             _ => {
-                for c in "Unknown parameter\r\n".chars() {
-                    output_queue.enqueue(c).ok();
-                }
+                output_string.push_str("Unknown parameter\r\n").ok();
             }
         }
     }
@@ -125,6 +117,9 @@ mod app {
 
     #[init(local = [uart2_rx_queue: Queue<u8, 32> = Queue::new(), uart2_tx_queue: Queue<u8, 32> = Queue::new()])]
     fn init(cx: init::Context) -> (Shared, Local) {
+        rtt_init_print!();
+        rprintln!("Hello, world!");
+
         let dp = cx.device;
         let rcc = dp.RCC.constrain();
         let clocks = rcc
@@ -156,7 +151,7 @@ mod app {
         let (uart2_rx_producer, uart2_rx_consumer) = cx.local.uart2_rx_queue.split();
         let (uart2_tx_producer, uart2_tx_consumer) = cx.local.uart2_tx_queue.split();
 
-        let serial_debug_cli = embedded_cli::EmbeddedCli::new("Serial Debug", &MENU);
+        let serial_debug_cli = embedded_cli::EmbeddedCli::new("Serial Debug", MENU);
 
         cli_task::spawn().ok();
 
@@ -188,7 +183,7 @@ mod app {
 
             // Check if there is something from embedded_cli.get_output_char. If there is
             // then send it to serial_debug_tx
-            while true {
+            loop {
                 let byte = cx.local.serial_debug_cli.get_output_char();
                 match byte {
                     Some(byte) => {

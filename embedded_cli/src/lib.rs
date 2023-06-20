@@ -6,8 +6,6 @@ use heapless::Vec;
 
 const BUFFER_SIZE: usize = 1028;
 
-// TODO: Add a way to add a string to the output buffer in a macro / function
-
 pub struct MenuParameters {
     pub name: &'static str,
     pub description: &'static str,
@@ -16,7 +14,7 @@ pub struct MenuParameters {
 pub struct MenuItem<'a> {
     pub command: &'static str,
     pub description: &'static str,
-    pub function: fn(&Vec<&str, 8>, &mut Queue<char, BUFFER_SIZE>),
+    pub function: fn(&Vec<&str, 8>, &mut String<BUFFER_SIZE>),
     pub parameters: &'a [MenuParameters],
 }
 
@@ -134,9 +132,13 @@ impl EmbeddedCli {
                         }
                     } else {
                         let mut found = false;
+                        let mut function_output_string = String::<BUFFER_SIZE>::new();
                         for item in self.menu {
                             if item.command.starts_with(input_vector[0]) {
-                                (item.function)(&input_vector, &mut self.output_buffer);
+                                (item.function)(&input_vector, &mut function_output_string);
+                                for c in function_output_string.chars() {
+                                    self.output_buffer.enqueue(c).ok();
+                                }
                                 found = true;
                                 break;
                             }
