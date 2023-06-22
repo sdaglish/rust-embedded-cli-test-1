@@ -205,7 +205,7 @@ mod app {
         if let Ok(byte) = rx.read() {
             cx.local.uart2_rx_producer.enqueue(byte).ok();
         } else {
-            // rprintln!("No good");
+            rprintln!("No space on uart2_rx_producer");
         }
     }
 }
