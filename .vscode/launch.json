@@ -4,12 +4,14 @@
     {
       "type": "probe-rs-debug",
       "request": "launch",
-      "name": "probe_rs Executable launch example",
+      "name": "probe_rs debug",
       "cwd": "${workspaceFolder}",
-      // "speed": 24000, //!MODIFY (or remove)
+      // "speed": 14000, //!MODIFY (or remove)
       // "probe": "VID:PID:<Serial>", //!MODIFY (or remove)
       "runtimeExecutable": "probe-rs-debugger",
-      "runtimeArgs": ["debug"],
+      "runtimeArgs": [
+        "debug"
+      ],
       "chip": "STM32F411RETx", //!MODIFY
       "flashingConfig": {
         "flashingEnabled": true,
@@ -20,18 +22,18 @@
         {
           "coreIndex": 0,
           "programBinary": "target/thumbv7em-none-eabihf/debug/embedded_cli_test", //!MODIFY
-          // "svdFile": "Relative or fully qualified path to your programBinary" //!MODIFY
+          "svdFile": "./STM32F411.svd", //!MODIFY
+          "rttEnabled": true,
         }
       ],
       "env": {
         //!MODIFY (or remove)
-        // "RUST_LOG": "info" // If you set this variable, check the VSCode console log window for the location of the log file.
+        "RUST_LOG": "info" // If you set this variable, check the VSCode console log window for the location of the log file.
       },
       "consoleLogLevel": "Console" //Info, Debug
     }
   ]
 }
-
 // {
 //   "version": "0.2.0",
 //   "configurations": [

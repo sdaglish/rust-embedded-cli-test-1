@@ -201,6 +201,7 @@ mod app {
 
     #[task(binds = USART2, local = [serial_debug_rx, uart2_rx_producer])]
     fn usart_rx(cx: usart_rx::Context) {
+        let test = false;
         let rx = cx.local.serial_debug_rx;
         if let Ok(byte) = rx.read() {
             cx.local.uart2_rx_producer.enqueue(byte).ok();
