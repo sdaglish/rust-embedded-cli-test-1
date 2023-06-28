@@ -83,6 +83,7 @@ impl EmbeddedCli {
 
                 {
                     if input_vector[0] == "help" {
+                        let mut command_found = false;
                         let mut help_string = String::<BUFFER_SIZE>::new();
                         // TODO: This would be better if it was a separate function, but borrow issues...
                         if input_vector.len() == 1 {
@@ -100,7 +101,9 @@ impl EmbeddedCli {
                             }
                         } else {
                             for item in self.menu {
-                                if item.command.starts_with(input_vector[1]) {
+                                if item.command == (input_vector[1]) {
+                                    command_found = true;
+
                                     help_string.push_str("SUMMARY:\n\r").ok();
                                     help_string.push_str(item.command).ok();
                                     for params in item.parameters {
@@ -126,6 +129,11 @@ impl EmbeddedCli {
                                     break;
                                 }
                             }
+                        }
+                        if !command_found {
+                            help_string.push_str("Unknown command: ").ok();
+                            help_string.push_str(input_vector[1]).ok();
+                            help_string.push_str("\r\n").ok();
                         }
                         for c in help_string.chars() {
                             self.output_buffer.enqueue(c).ok();
