@@ -1,3 +1,30 @@
+//! A simple CLI for use in embedded systems
+//!
+//! It uses a String to store the input buffer and a Queue to store the output buffer.
+//!
+//! NOTE: This module is still in active development, and is not ready for use.
+//!
+//! The struct takes a static array of MenuItems and Parameters. It is not possble to add items
+//! at runtime.
+//!
+//! # Example:
+//!
+//! ```
+//! use embedded_cli::{MenuItem, MenuParameters};
+//! use heapless::String;
+//!
+//! const MENU: &[MenuItem] = &[
+//!    MenuItem {
+//!         command: "hello",
+//!         description: "Prints hello world",
+//!         parameters: &[],
+//!         function: |_, output_string| {
+//!             output_string.push_str("Hello world! function\r\n").ok();
+//!         },
+//!     },
+//! ];
+//! let mut cli = embedded_cli::EmbeddedCli::new("CLI name", MENU);
+
 #![no_std]
 
 use heapless::spsc::Queue;
@@ -18,7 +45,9 @@ pub struct MenuItem<'a> {
     pub parameters: &'a [MenuParameters],
 }
 
+/// This module make it easy
 pub struct EmbeddedCli {
+    /// Somethin
     pub name: &'static str,
     pub input_buffer: String<BUFFER_SIZE>,
     pub output_buffer: Queue<char, BUFFER_SIZE>,
