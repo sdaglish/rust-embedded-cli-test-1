@@ -28,7 +28,6 @@ mod app {
             description: "Prints hello world",
             parameters: &[],
             function: |_, output_string| {
-                output_string.clear();
                 output_string.push_str("Hello world! function\r\n").ok();
             },
         },
@@ -46,7 +45,6 @@ mod app {
                 },
             ],
             function: |_, output_string| {
-                output_string.clear();
                 output_string.push_str("Test function!\r\n").ok();
             },
         },
@@ -68,7 +66,6 @@ mod app {
     ];
 
     fn cli_temperature_setpoint(parameters: &Vec<&str, 8>, output_string: &mut String<1028>) {
-        output_string.clear();
         if parameters.len() == 1 {
             output_string.push_str("Missing parameter\r\n").ok();
             return;

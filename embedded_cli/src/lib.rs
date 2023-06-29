@@ -66,18 +66,14 @@ impl EmbeddedCli {
                 return;
             }
 
-            self.output_buffer.enqueue('\r').ok();
-            self.output_buffer.enqueue('\n').ok();
-
             // Checking through menu list to see if what's been entered was relevent.
-            // But fifrst checking for the work help.
+            // But first checking for the work help.
+            let mut help_string = String::<BUFFER_SIZE>::new();
+            help_string.push_str("\r\n").ok();
 
             // Split input_buffer into a vector, based on whitespaces.
             {
                 let input_vector: Vec<&str, 8> = self.input_buffer.split(' ').collect();
-                // for s in self.input_buffer.split(' ') {
-                //     input_vector.push(s).ok();
-                // }
 
                 // Check through menu list to see if what's been entered was relevant.
                 // But first checking for the word "help".
@@ -85,7 +81,6 @@ impl EmbeddedCli {
                 {
                     if input_vector[0] == "help" {
                         let mut command_found = false;
-                        let mut help_string = String::<BUFFER_SIZE>::new();
                         // TODO: This would be better if it was a separate function, but borrow issues...
                         if input_vector.len() == 1 {
                             help_string.push_str("AVAILABLE ITEMS:\n\r").ok();
@@ -130,46 +125,36 @@ impl EmbeddedCli {
                                     break;
                                 }
                             }
-                        }
-                        if !command_found {
-                            help_string.push_str("Unknown command: ").ok();
-                            help_string.push_str(input_vector[1]).ok();
-                            help_string.push_str("\r\n").ok();
-                        }
-                        for c in help_string.chars() {
-                            self.output_buffer.enqueue(c).ok();
+                            if !command_found {
+                                help_string.push_str("Unknown command: ").ok();
+                                help_string.push_str(input_vector[1]).ok();
+                                help_string.push_str("\r\n").ok();
+                            }
                         }
                     } else {
                         let mut found = false;
-                        let mut function_output_string = String::<BUFFER_SIZE>::new();
                         for item in self.menu {
-                            if item.command.starts_with(input_vector[0]) {
-                                (item.function)(&input_vector, &mut function_output_string);
-                                for c in function_output_string.chars() {
-                                    self.output_buffer.enqueue(c).ok();
-                                }
+                            if item.command == input_vector[0] {
+                                (item.function)(&input_vector, &mut help_string);
                                 found = true;
                                 break;
                             }
                         }
                         if !found {
-                            for c in "Unknown command: ".chars() {
-                                self.output_buffer.enqueue(c).ok();
-                            }
-                            for c in input_vector[0].chars() {
-                                self.output_buffer.enqueue(c).ok();
-                            }
-                            self.output_buffer.enqueue('\r').ok();
-                            self.output_buffer.enqueue('\n').ok();
+                            help_string.push_str("Unknown command: ").ok();
+                            help_string.push_str(input_vector[0]).ok();
+                            help_string.push_str("\r\n").ok();
                         }
                     }
                 }
             }
+
             self.input_buffer.clear();
-            self.output_buffer.enqueue('\r').ok();
-            self.output_buffer.enqueue('\n').ok();
-            self.output_buffer.enqueue('>').ok();
-            self.output_buffer.enqueue(' ').ok();
+            help_string.push_str("\r\n> ").ok();
+
+            for c in help_string.chars() {
+                self.output_buffer.enqueue(c).ok();
+            }
         }
     }
 
