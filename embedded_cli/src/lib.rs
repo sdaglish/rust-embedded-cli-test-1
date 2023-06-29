@@ -45,10 +45,20 @@ impl EmbeddedCli {
     pub fn add_char(&mut self, c: char) {
         // Backspace
         if (c == '\u{8f}') || (c == '\u{7f}') {
-            self.output_buffer.enqueue('\x08').ok();
-            self.output_buffer.enqueue(' ').ok();
-            self.output_buffer.enqueue('\x08').ok();
+            // self.output_buffer.enqueue('\x08').ok();
+            // self.output_buffer.enqueue(' ').ok();
+            // self.output_buffer.enqueue('\x08').ok();
+            "\x08 \x08".chars().for_each(|c| {
+                self.output_buffer.enqueue(c).ok();
+            });
             self.input_buffer.pop();
+        } else if c == 27 as char {
+            for _ in 0..self.input_buffer.len() {
+                "\x08 \x08".chars().for_each(|c| {
+                    self.output_buffer.enqueue(c).ok();
+                });
+                self.input_buffer.pop();
+            }
         } else {
             self.input_buffer.push(c).ok();
             self.output_buffer.enqueue(c).ok();
@@ -57,18 +67,21 @@ impl EmbeddedCli {
 
     // TODO: This takes up 5K of flash.  Can we make it smaller?
     pub fn process(&mut self) {
+        let mut help_string = String::<BUFFER_SIZE>::new();
         if self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
             while self.input_buffer.ends_with('\r') || self.input_buffer.ends_with('\n') {
                 self.input_buffer.pop();
             }
 
             if self.input_buffer.len() == 0 {
+                "\n\r> ".chars().for_each(|c| {
+                    self.output_buffer.enqueue(c).ok();
+                });
                 return;
             }
 
             // Checking through menu list to see if what's been entered was relevent.
             // But first checking for the work help.
-            let mut help_string = String::<BUFFER_SIZE>::new();
             help_string.push_str("\r\n").ok();
 
             // Split input_buffer into a vector, based on whitespaces.
@@ -97,7 +110,7 @@ impl EmbeddedCli {
                             }
                         } else {
                             for item in self.menu {
-                                if item.command == (input_vector[1]) {
+                                if item.command == input_vector[1] {
                                     command_found = true;
 
                                     help_string.push_str("SUMMARY:\n\r").ok();

@@ -113,7 +113,6 @@ mod app {
     #[init(local = [uart2_rx_queue: Queue<u8, 32> = Queue::new(), uart2_tx_queue: Queue<u8, 32> = Queue::new()])]
     fn init(cx: init::Context) -> (Shared, Local) {
         rtt_init_print!();
-        rprintln!("Hello, world!");
 
         let dp = cx.device;
         let rcc = dp.RCC.constrain();
