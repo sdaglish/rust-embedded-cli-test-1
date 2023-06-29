@@ -166,30 +166,30 @@ mod app {
     #[task(local = [uart2_rx_consumer, serial_debug_cli, serial_debug_tx])]
     async fn cli_task(cx: cli_task::Context) {
         let uart2_rx_consumer = cx.local.uart2_rx_consumer;
+        let serial_debug_cli = cx.local.serial_debug_cli;
 
         loop {
             while uart2_rx_consumer.peek().is_some() {
                 if let Some(byte) = uart2_rx_consumer.dequeue() {
-                    cx.local.serial_debug_cli.add_char(byte as char);
+                    serial_debug_cli.add_char(byte as char);
                 }
             }
-            cx.local.serial_debug_cli.process();
+            serial_debug_cli.process();
 
             // Check if there is something from embedded_cli.get_output_char. If there is
             // then send it to serial_debug_tx
-            loop {
-                let byte = cx.local.serial_debug_cli.get_output_char();
+            while !serial_debug_cli.output_buffer_is_empty() {
+                let byte = serial_debug_cli.get_output_char();
                 match byte {
                     Some(byte) => {
                         cx.local.serial_debug_tx.write(byte as u8).ok();
-                        Systick::delay(1.millis()).await;
+                        // Systick::delay(1.millis()).await;
                     }
-                    None => {
-                        break;
-                    }
-                }
+                    _ => {}
+                };
             }
-            Systick::delay(100.millis()).await;
+
+            Systick::delay(10.millis()).await;
         }
     }
 

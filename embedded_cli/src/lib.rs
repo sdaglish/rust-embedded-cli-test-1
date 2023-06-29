@@ -48,10 +48,12 @@ impl EmbeddedCli {
             // self.output_buffer.enqueue('\x08').ok();
             // self.output_buffer.enqueue(' ').ok();
             // self.output_buffer.enqueue('\x08').ok();
-            "\x08 \x08".chars().for_each(|c| {
-                self.output_buffer.enqueue(c).ok();
-            });
-            self.input_buffer.pop();
+            if !self.input_buffer.is_empty() {
+                "\x08 \x08".chars().for_each(|c| {
+                    self.output_buffer.enqueue(c).ok();
+                });
+                self.input_buffer.pop();
+            }
         } else if c == 27 as char {
             for _ in 0..self.input_buffer.len() {
                 "\x08 \x08".chars().for_each(|c| {
@@ -63,6 +65,10 @@ impl EmbeddedCli {
             self.input_buffer.push(c).ok();
             self.output_buffer.enqueue(c).ok();
         }
+    }
+
+    pub fn output_buffer_is_empty(&mut self) -> bool {
+        return self.output_buffer.is_empty();
     }
 
     // TODO: This takes up 5K of flash.  Can we make it smaller?
@@ -86,6 +92,8 @@ impl EmbeddedCli {
 
             // Split input_buffer into a vector, based on whitespaces.
             {
+                // TODO: An overflow here will cause a panic to happen.
+                // Update to check rather than just panic!
                 let input_vector: Vec<&str, 8> = self.input_buffer.split(' ').collect();
 
                 // Check through menu list to see if what's been entered was relevant.
