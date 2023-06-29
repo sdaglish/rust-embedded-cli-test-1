@@ -13,7 +13,7 @@ mod app {
     use heapless::spsc::{Consumer, Producer, Queue};
     use heapless::String;
     use heapless::Vec;
-    use rtic_monotonics::systick::*;
+    use rtic_monotonics::systick::Systick;
     use rtt_target::{rprintln, rtt_init_print};
     use stm32f4xx_hal::{
         pac::USART2,
@@ -110,8 +110,6 @@ mod app {
         serial_debug_tx: Tx<USART2>,
         uart2_rx_consumer: Consumer<'static, u8, 32>,
         uart2_rx_producer: Producer<'static, u8, 32>,
-        uart2_tx_consumer: Consumer<'static, u8, 32>,
-        uart2_tx_producer: Producer<'static, u8, 32>,
         serial_debug_cli: embedded_cli::EmbeddedCli,
     }
 
@@ -143,13 +141,14 @@ mod app {
             Config::default().baudrate(115_200.bps()),
             &clocks,
         )
-        .unwrap()
+        // .unwrap()
+        .expect("USART2 not setup correctly")
         .split();
 
         serial_debug_rx.listen();
 
         let (uart2_rx_producer, uart2_rx_consumer) = cx.local.uart2_rx_queue.split();
-        let (uart2_tx_producer, uart2_tx_consumer) = cx.local.uart2_tx_queue.split();
+        // let (uart2_tx_producer, uart2_tx_consumer) = cx.local.uart2_tx_queue.split();
 
         let serial_debug_cli = embedded_cli::EmbeddedCli::new("Serial Debug", MENU);
 
@@ -162,13 +161,12 @@ mod app {
                 serial_debug_tx,
                 uart2_rx_consumer,
                 uart2_rx_producer,
-                uart2_tx_consumer,
-                uart2_tx_producer,
                 serial_debug_cli,
             },
         )
     }
 
+    // Obtains the CLI rx, sends it over to the CLI, and then transmits whateven is stored in the tx
     #[task(local = [uart2_rx_consumer, serial_debug_cli, serial_debug_tx])]
     async fn cli_task(cx: cli_task::Context) {
         let uart2_rx_consumer = cx.local.uart2_rx_consumer;
@@ -201,7 +199,6 @@ mod app {
 
     #[task(binds = USART2, local = [serial_debug_rx, uart2_rx_producer])]
     fn usart_rx(cx: usart_rx::Context) {
-        let test = false;
         let rx = cx.local.serial_debug_rx;
         if let Ok(byte) = rx.read() {
             cx.local.uart2_rx_producer.enqueue(byte).ok();

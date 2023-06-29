@@ -26,6 +26,7 @@ pub struct EmbeddedCli {
 }
 
 impl EmbeddedCli {
+    #[must_use]
     pub fn new(name: &'static str, menu: &'static [MenuItem<'static>]) -> Self {
         let mut s = Self {
             name,
