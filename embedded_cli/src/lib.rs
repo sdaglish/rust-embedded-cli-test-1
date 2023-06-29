@@ -94,7 +94,11 @@ impl EmbeddedCli {
             {
                 // TODO: An overflow here will cause a panic to happen.
                 // Update to check rather than just panic!
-                let input_vector: Vec<&str, 8> = self.input_buffer.split(' ').collect();
+                // let input_vector: Vec<&str, 8> = self.input_buffer.split(' ').collect();
+                let mut input_vector: Vec<&str, 8> = Vec::new();
+                for item in self.input_buffer.split(' ') {
+                    input_vector.push(item).ok();
+                }
 
                 // Check through menu list to see if what's been entered was relevant.
                 // But first checking for the word "help".
