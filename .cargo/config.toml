@@ -19,8 +19,10 @@ rustflags = [
   # "-C", "inline-threshold=123", # +
   "-C",
   "link-arg=-Tlink.x",
-  # "-C", "llvm-args=-inline-threshold=275",
-  # "-C", "inline-threshold=123", # +
+  # "-C",
+  # "llvm-args=-inline-threshold=275",
+  # "-C",
+  # "inline-threshold=123", # +
   # "-C", "inline-threshold=1000",
 
   # if you run into problems with LLD switch to the GNU linker by commenting out
