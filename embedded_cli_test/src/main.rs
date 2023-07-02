@@ -16,7 +16,9 @@ mod app {
     use heapless::Vec;
     use rtic_monotonics::systick::Systick;
     use rtt_target::{rprintln, rtt_init_print};
+    use stm32f4xx_hal::gpio::gpiob;
     use stm32f4xx_hal::{
+        i2c::Mode,
         pac::USART2,
         prelude::*,
         serial::{config::Config, Rx, Serial, Tx},
@@ -103,6 +105,20 @@ mod app {
         // let (uart2_tx_producer, uart2_tx_consumer) = cx.local.uart2_tx_queue.split();
 
         let serial_debug_cli = embedded_cli::EmbeddedCli::new("Serial Debug", crate::menu::MENU);
+
+        // Setting up the I2C peripheral for GPIO expander
+        // SCL = PB8, SDA = PB9
+        let gpiob = dp.GPIOB.split();
+        let scl = gpiob.pb8;
+        let sda = gpiob.pb9;
+
+        let mut i2c = dp
+            .I2C1
+            .i2c((scl, sda),
+            Mode::standard(100_000.Hz()),
+            &clocks);
+
+        i2c.write_read(0x20, &[0x00], &mut [0x00]).ok();
 
         cli_task::spawn().ok();
 
