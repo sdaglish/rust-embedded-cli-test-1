@@ -16,7 +16,6 @@ mod app {
     use heapless::Vec;
     use rtic_monotonics::systick::Systick;
     use rtt_target::{rprintln, rtt_init_print};
-    use stm32f4xx_hal::gpio::gpiob;
     use stm32f4xx_hal::{
         i2c::{DutyCycle, Mode},
         pac::USART2,
@@ -69,6 +68,7 @@ mod app {
         uart2_rx_consumer: Consumer<'static, u8, UART_RX_SIZE>,
         uart2_rx_producer: Producer<'static, u8, UART_RX_SIZE>,
         serial_debug_cli: embedded_cli::EmbeddedCli,
+        i2c: stm32f4xx_hal::i2c::I2c<stm32f4xx_hal::pac::I2C1>,
     }
 
     #[init(local = [uart2_rx_queue: Queue<u8, UART_RX_SIZE> = Queue::new(), uart2_tx_queue: Queue<u8, UART_RX_SIZE> = Queue::new()])]
@@ -112,7 +112,9 @@ mod app {
         let scl = gpiob.pb8.into_alternate_open_drain();
         let sda = gpiob.pb9.into_alternate_open_drain();
 
-        let mut i2c = dp.I2C1.i2c(
+        let mut i2c: stm32f4xx_hal::i2c::I2c<
+            you_must_enable_the_rt_feature_for_the_pac_in_your_cargo_toml::I2C1,
+        > = dp.I2C1.i2c(
             (scl, sda),
             Mode::Fast {
                 frequency: 400_000.Hz(),
@@ -123,9 +125,10 @@ mod app {
 
         // Write to the GPIO expander - PCA9535PW - and set IO - 0.0 to output and high
         i2c.write(0x20, &[0x06, 0x00]).unwrap();
-        i2c.write(0x20, &[0x02, 0x01]).unwrap();
+        i2c.write(0x20, &[0x02, 0x00]).unwrap();
 
         cli_task::spawn().ok();
+        gpio_toggle::spawn().ok();
 
         (
             Shared {},
@@ -135,6 +138,7 @@ mod app {
                 uart2_rx_consumer,
                 uart2_rx_producer,
                 serial_debug_cli,
+                i2c,
             },
         )
     }
@@ -167,6 +171,17 @@ mod app {
             }
 
             Systick::delay(10.millis()).await;
+        }
+    }
+
+    #[task(local = [i2c])]
+    async fn gpio_toggle(cx: gpio_toggle::Context) {
+        let i2c = cx.local.i2c;
+        loop {
+            i2c.write(0x20, &[0x02, 0x00]).unwrap();
+            Systick::delay(5000.millis()).await;
+            i2c.write(0x20, &[0x02, 0x1]).unwrap();
+            Systick::delay(5000.millis()).await;
         }
     }
 
