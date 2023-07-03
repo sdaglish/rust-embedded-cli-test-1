@@ -18,7 +18,7 @@ mod app {
     use rtt_target::{rprintln, rtt_init_print};
     use stm32f4xx_hal::gpio::gpiob;
     use stm32f4xx_hal::{
-        i2c::Mode,
+        i2c::{DutyCycle, Mode},
         pac::USART2,
         prelude::*,
         serial::{config::Config, Rx, Serial, Tx},
@@ -109,16 +109,21 @@ mod app {
         // Setting up the I2C peripheral for GPIO expander
         // SCL = PB8, SDA = PB9
         let gpiob = dp.GPIOB.split();
-        let scl = gpiob.pb8;
-        let sda = gpiob.pb9;
+        let scl = gpiob.pb8.into_alternate_open_drain();
+        let sda = gpiob.pb9.into_alternate_open_drain();
 
-        let mut i2c = dp
-            .I2C1
-            .i2c((scl, sda),
-            Mode::standard(100_000.Hz()),
-            &clocks);
+        let mut i2c = dp.I2C1.i2c(
+            (scl, sda),
+            Mode::Fast {
+                frequency: 400_000.Hz(),
+                duty_cycle: DutyCycle::Ratio2to1,
+            },
+            &clocks,
+        );
 
-        i2c.write_read(0x20, &[0x00], &mut [0x00]).ok();
+        // Write to the GPIO expander - PCA9535PW - and set IO - 0.0 to output and high
+        i2c.write(0x20, &[0x06, 0x00]).unwrap();
+        i2c.write(0x20, &[0x02, 0x01]).unwrap();
 
         cli_task::spawn().ok();
 
