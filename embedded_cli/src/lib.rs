@@ -24,6 +24,22 @@
 //!     },
 //! ];
 //! let mut cli = embedded_cli::EmbeddedCli::new("CLI name", MENU);
+//!
+//! ```
+//!
+//! # Features
+//!
+//! * Backspace / Delete keys on the screen
+//! * Press ESC to clear the current line
+//!
+//! # TODO
+//!
+//! * Add support for scrolling through history
+//! * Add support for tab completion
+//! * Add support for arrow keys
+//! * Add choice of mirroring input to output - useful for ESP32
+//!
+//! # Version History
 
 #![no_std]
 
@@ -45,7 +61,6 @@ pub struct MenuItem<'a> {
     pub parameters: &'a [MenuParameters],
 }
 
-/// This module make it easy
 pub struct EmbeddedCli {
     /// Somethin
     pub name: &'static str,

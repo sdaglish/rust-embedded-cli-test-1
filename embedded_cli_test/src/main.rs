@@ -112,9 +112,7 @@ mod app {
         let scl = gpiob.pb8.into_alternate_open_drain();
         let sda = gpiob.pb9.into_alternate_open_drain();
 
-        let mut i2c: stm32f4xx_hal::i2c::I2c<
-            you_must_enable_the_rt_feature_for_the_pac_in_your_cargo_toml::I2C1,
-        > = dp.I2C1.i2c(
+        let mut i2c = dp.I2C1.i2c(
             (scl, sda),
             Mode::Fast {
                 frequency: 400_000.Hz(),
